@@ -24,13 +24,13 @@ class ServiceMessagesTest {
     fun addMessageNoChat() {
         addChat()
         val result = service.addMessage(DirectMessages(1), 7)
-        assertEquals(result, -1)
+        assertEquals(result, 1)
     }
 
     @Test
     fun addMessageNoChats() {
         val result = service.addMessage(DirectMessages(1), 7)
-        assertEquals(result, -1)
+        assertEquals(result, 1)
     }
 
     @Test
@@ -160,7 +160,7 @@ class ServiceMessagesTest {
 
     @Test
     fun getCountUnReadMessageChats() {
-        addChat()
+        //addChat()
         addMessage()
         val result = service.getCountUnReadMessageChats()
         assertEquals(result, 3)
@@ -200,8 +200,9 @@ class ServiceMessagesTest {
 
     @Test
     fun addchat() {
+        addChat()
         val result = service.addchat(Chat())
-        assertEquals(result, 1)
+        assertEquals(result, 6)
     }
 
     @Test

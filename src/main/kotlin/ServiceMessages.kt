@@ -5,23 +5,22 @@ class ServiceMessages {
     private var countUnReadMessageChat: Int = 0
 
     fun addMessage(obj: DirectMessages, idChat: Int): Int {
-        if (servChat.getCountChats() == 0) {
-            println("Сначала нужно создать чат!")
-            return -1
+        var idNewChat = idChat
+        val index = getIndexChat(idNewChat)
+        if (index == -1) {
+            idNewChat = servChat.addObj(Chat())
+            println("Создан новый чат с ID $idNewChat")
         }
-        val index = getIndexChat(idChat)
-        return if (index != -1) {
-            servChat.chats[index].messages.add(
-                obj.copy(
-                    idMessage = servChat.chats[index].freeMessageID,
-                    idMessageChat = idChat
-                )
+        servChat.chats[idNewChat].messages.add(
+            obj.copy(
+                idMessage = servChat.chats[idNewChat].freeMessageID,
+                idMessageChat = idNewChat
             )
-            servChat.chats[index].countMessage++
-            servChat.chats[index].freeMessageID++
-            if (!servChat.chats[index].users.contains(obj.idAuthor)) servChat.chats[index].users.add(obj.idAuthor)
-            1
-        } else index
+        )
+        servChat.chats[idNewChat].countMessage++
+        servChat.chats[idNewChat].freeMessageID++
+        if (!servChat.chats[idNewChat].users.contains(obj.idAuthor)) servChat.chats[idNewChat].users.add(obj.idAuthor)
+        return 1
     }
 
     fun deleteMessage(idMessage: Int, idChat: Int): Int {
@@ -171,7 +170,7 @@ class ServiceMessages {
         private var countChats: Int = 0
         override fun addObj(obj: Chat): Int {
             chats.add(obj.copy(idChat = countChats++))
-            return 1
+            return countChats-1
         }
 
         override fun deleteObj(id: Int): Int {
