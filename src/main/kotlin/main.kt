@@ -10,6 +10,8 @@ fun main() {
 
     service.editMessage(DirectMessages(2, text = "Edit Message", idMessage = 0), 1)
     printList(service.getMessagesChat(1))
+
+    println(service.unReadMessageChat(1).joinToString (separator = "\n"))
 }
 
 fun <T> printList(list: MutableList<T>) = run {
