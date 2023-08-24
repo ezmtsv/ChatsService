@@ -150,11 +150,12 @@ class ServiceMessagesTest {
         addChat()
         addMessage()
         val lst = mutableListOf(
-            DirectMessages(idMessage = 0, idAuthor = 1, idMessageChat = 0),
-            DirectMessages(idMessage = 0, idAuthor = 1, idMessageChat = 1),
-            DirectMessages(idMessage = 0, idAuthor = 1, idMessageChat = 2)
+            DirectMessages(idMessage = 0, idAuthor = 1, idMessageChat = 0, flagRead = true),
+            DirectMessages(idMessage = 0, idAuthor = 1, idMessageChat = 1, flagRead = true),
+            DirectMessages(idMessage = 0, idAuthor = 1, idMessageChat = 2, flagRead = true)
         )
         val result = service.lastMessageChats()
+        //println(result.joinToString (separator = "\n"))
         assertEquals(result, lst)
     }
 
@@ -171,7 +172,7 @@ class ServiceMessagesTest {
         addChat()
         addMessage()
         val lst = mutableListOf(
-            DirectMessages(idMessage = 0, idAuthor = 1, idMessageChat = 0)
+            DirectMessages(idMessage = 0, idAuthor = 1, idMessageChat = 0, flagRead = true)
         )
         val result = service.unReadMessageChat(0)
         assertEquals(result, lst)
@@ -195,6 +196,19 @@ class ServiceMessagesTest {
             DirectMessages(idMessage = 1, idAuthor = 1, idMessageChat = 0)
         )
         val result = service.getMessagesChat(0)
+        assertEquals(result, lst)
+    }
+
+    @Test
+    fun getMessages(){
+        addChat()
+        addMessage()
+        addMessage()
+        val lst = mutableListOf(
+            DirectMessages(idMessage = 0, idAuthor = 1, idMessageChat = 1, flagRead = true),
+            DirectMessages(idMessage = 1, idAuthor = 1, idMessageChat = 1, flagRead = true)
+        )
+        val result = service.getMessages(1, 0, 2)
         assertEquals(result, lst)
     }
 
@@ -243,5 +257,18 @@ class ServiceMessagesTest {
         val lst = hashSetOf(1, 5, 15, 25)
         val result = service.getUsersChat(2)
         assertEquals(result, lst)
+    }
+
+    @Test(expected = ChatServiceException::class)
+    fun getMessagesThrow() {
+        service.getMessages(5, 7, 5)
+    }
+    @Test(expected = ChatServiceException::class)
+    fun getMessagesChatThrow() {
+        service.getMessagesChat(10)
+    }
+    @Test(expected = ChatServiceException::class)
+    fun unReadMessageChatThrow() {
+        service.unReadMessageChat(20)
     }
 }

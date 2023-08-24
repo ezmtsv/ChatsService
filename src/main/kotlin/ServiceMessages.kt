@@ -1,8 +1,7 @@
+
+class ChatServiceException(message: String) : RuntimeException(message)
 class ServiceMessages {
     private var servChat: ServiceChats = ServiceChats()
-    private var countunReadMessageChats: Int = 0
-    private var countUnreadChats: Int = 0
-    private var countUnReadMessageChat: Int = 0
 
     fun addMessage(obj: DirectMessages, idChat: Int): Int {
         var idNewChat = idChat
@@ -78,87 +77,68 @@ class ServiceMessages {
         } else index
     }
 
-    fun getChat(id: Int): Chat? {                                                        // получить чат
-        return servChat.chats.firstOrNull { it.idChat == id }
-    }
+    fun getChat(id: Int): Chat? =
+        servChat.chats.firstOrNull { it.idChat == id }                          // получить чат
 
-    fun getUnreadChats (): MutableList<Chat> {                                          // получить список чатов с непрочитанными сообщениями
-        countUnreadChats = 0
-        var list = mutableListOf<Chat>()
-        for (chat in servChat.chats) {
-            val messages = chat.messages.filter { !it.flagRead }
-            if (messages.isNotEmpty()) {
-                list.add(chat)
-                countUnreadChats++
-            }
-         }
-        return list
-    }
+    fun getUnreadChats(): MutableList<Chat> =                                   // получить список чатов с непрочитанными сообщениями
+        servChat.chats.asSequence()
+            ?.filter { chat -> chat.messages.any { !it.flagRead } }
+            ?.toMutableList()
+            ?: throw ChatServiceException("Error getUnreadChats()")
 
-    fun getCountUnreadChats(): Int {                                                    // кол-во чатов с непрочитанными сообщениями
-        getUnreadChats ()
-        return countUnreadChats
-    }
+    fun getCountUnreadChats(): Int = getUnreadChats().size                      // кол-во чатов с непрочитанными сообщениями
 
-    fun getChatsList(): MutableList<Chat> {                                             // получить все чаты
-        return servChat.chats
-    }
 
-    fun lastMessageChats(): MutableList<DirectMessages> {                             // последние(непрочитанные) сообщения всех чатов
-        countunReadMessageChats = 0
-        var list = mutableListOf<DirectMessages>()
-        for (chat in servChat.chats) {
-            list.addAll(chat.messages.filter { !it.flagRead })
-        }
-        for(message in list) {
-            editMessage(message.copy(flagRead = true), message.idMessageChat)                          // читаем сообщения
-        }
-        countunReadMessageChats = list.size
-        return list
-    }
+    fun getChatsList(): MutableList<Chat> =
+        servChat.chats                                                          // получить все чаты
 
-    fun getCountUnReadMessageChats(): Int {                                             // кол-во непрочитанных сообщений всех чатов
-        lastMessageChats()
-        return countunReadMessageChats
-    }
+    fun lastMessageChats(): MutableList<DirectMessages> =                       // последние(непрочитанные) сообщения всех чатов
+        servChat.chats.asSequence()
+            ?.map { it.messages }
+            ?.flatten()
+            ?.filter { !it.flagRead }
+            ?.map { it.copy(flagRead = true) }
+            ?.toMutableList()
+            ?: throw ChatServiceException("Error lastMessageChats")
 
-    fun unReadMessageChat(idChat: Int): MutableList<DirectMessages> {                   // непрочитанные сообщения чата с idChat
-        countUnReadMessageChat = 0
-        var list = mutableListOf<DirectMessages>()
-        val indexChat = getIndexChat(idChat)
-        list.addAll(servChat.chats[indexChat].messages.filter { !it.flagRead })
-        for(message in list) {
-            editMessage(message.copy(flagRead = true), idChat)                          // читаем сообщения
-        }
-        countUnReadMessageChat = list.size
-        return list
-    }
 
-    fun getCountUnReadMessageChat(idChat: Int): Int {                                   // кол-во непрочитанных сообщений чата с idChat
-        unReadMessageChat(idChat)
-        return countUnReadMessageChat
-    }
+    fun getCountUnReadMessageChats(): Int =
+        lastMessageChats().size                                                 // кол-во непрочитанных сообщений всех чатов
 
-    fun getMessagesChat(idChat: Int): MutableList<DirectMessages> {                     // все сообщения чата с idChat
-        val index = getIndexChat(idChat)
-        return servChat.chats[index].messages
-    }
+    fun unReadMessageChat(idChat: Int): MutableList<DirectMessages> =           // непрочитанные сообщения чата с idChat
+        servChat.chats.find { it.idChat == idChat }
+            ?.messages?.filter { !it.flagRead }
+            ?.asSequence()
+            ?.map { it.copy(flagRead = true) }
+            ?.toMutableList()
+            ?: throw ChatServiceException("Error unReadMessageChat")
 
-    fun addchat(chat: Chat): Int {
-        return servChat.addObj(chat)
-    }
+    fun getCountUnReadMessageChat(idChat: Int): Int =
+        unReadMessageChat(idChat).size                                          // кол-во непрочитанных сообщений чата с idChat
 
-    fun delchat(id: Int): Int {
-        return servChat.deleteObj(id)
-    }
+    fun getMessages(idChat: Int, idStartMessage: Int, count: Int) : List<DirectMessages> =
+        servChat.chats.find { it.idChat == idChat }
+            ?.messages
+            ?.filter { it.idMessage >= idStartMessage }
+            ?.take(count)
+            ?.map { it.copy(flagRead = true) }
+            ?.toMutableList()
+            ?: throw ChatServiceException("Error getMessages")
 
-    fun editchat(chat: Chat, id: Int): Int {
-        return servChat.editObj(chat, id)
-    }
+    fun getMessagesChat(idChat: Int): MutableList<DirectMessages> =             // все сообщения чата с idChat
+        servChat.chats.find { it.idChat == idChat }
+            ?.messages
+            ?.asSequence()
+            ?.toMutableList()
+            ?: throw ChatServiceException("Messages not find")
 
-    fun getCountChats(): Int {
-        return servChat.getCountChats()
-    }
+    fun addchat(chat: Chat): Int = servChat.addObj(chat)
+
+    fun delchat(id: Int): Int = servChat.deleteObj(id)
+
+    fun editchat(chat: Chat, id: Int): Int = servChat.editObj(chat, id)
+
+    fun getCountChats(): Int = servChat.getCountChats()
 
     fun getUsersChat(idChats: Int): HashSet<Int> {
         val index = getIndexChat(idChats)
@@ -170,7 +150,7 @@ class ServiceMessages {
         private var countChats: Int = 0
         override fun addObj(obj: Chat): Int {
             chats.add(obj.copy(idChat = countChats++))
-            return countChats-1
+            return countChats - 1
         }
 
         override fun deleteObj(id: Int): Int {
